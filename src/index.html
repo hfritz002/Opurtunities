@@ -401,7 +401,18 @@ let investors = [];
 let editingId = null;
 let pendingLog = []; // log entries staged while editing
 
+function saveState() {
+  try { localStorage.setItem("pipeline", JSON.stringify({ investors, accelerators })); } catch {}
+}
+
 async function load() {
+  try {
+    const saved = localStorage.getItem("pipeline");
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.investors) { investors = data.investors; return; }
+    }
+  } catch {}
   try {
     const r = await fetch("data/pipeline.json");
     if (r.ok) {
@@ -538,7 +549,7 @@ function saveModal() {
   } else {
     investors.unshift(rec);
   }
-  closeModal(); render();
+  closeModal(); render(); saveState();
 }
 
 /* ============ events ============ */
@@ -549,7 +560,7 @@ $("saveBtn").onclick = saveModal;
 $("overlay").addEventListener("click", e => { if (e.target === $("overlay")) closeModal(); });
 $("deleteBtn").onclick = () => {
   if (editingId && confirm("Delete this investor from the pipeline?")) {
-    investors = investors.filter(x=>x.id!==editingId); closeModal(); render();
+    investors = investors.filter(x=>x.id!==editingId); closeModal(); render(); saveState();
   }
 };
 $("addLogBtn").onclick = () => {
@@ -588,6 +599,7 @@ $("importFile").onchange = e => {
       }
       render();
       if (currentTab === "accelerators") renderAccelerators();
+      saveState();
     } catch { alert("That file isn't valid pipeline JSON."); }
   };
   r.readAsText(file);
@@ -600,6 +612,13 @@ let pendingMaterials = [];
 let accPendingLog = [];
 
 async function loadAccelerators() {
+  try {
+    const saved = localStorage.getItem("pipeline");
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.accelerators) { accelerators = data.accelerators; return; }
+    }
+  } catch {}
   try {
     const r = await fetch("data/pipeline.json");
     if (r.ok) {
@@ -746,7 +765,7 @@ function saveAcceleratorModal() {
     accelerators.unshift(rec);
   }
   closeAcceleratorModal();
-  renderAccelerators();
+  renderAccelerators(); saveState();
 }
 
 /* ============ accelerator events ============ */
@@ -758,7 +777,7 @@ $("acc-deleteBtn").onclick = () => {
   if (accEditingId && confirm("Delete this accelerator?")) {
     accelerators = accelerators.filter(x=>x.id!==accEditingId);
     closeAcceleratorModal();
-    renderAccelerators();
+    renderAccelerators(); saveState();
   }
 };
 $("addMatBtn").onclick = () => {
