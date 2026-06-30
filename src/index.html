@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Principal AI · Investor Pipeline</title>
+<style>
+  /* ============ design tokens ============
+     Navy + coral from the Principal AI deck.
+     Display: a tight grotesque feel via system stack; data uses a mono utility face. */
+  :root {
+    --navy:        #0F1B3D;
+    --navy-2:      #16244d;
+    --coral:       #FF6B35;
+    --coral-soft:  #ffe7dc;
+    --ink:         #1d2433;
+    --muted:       #5b6472;
+    --line:        #e3e8ef;
+    --paper:       #ffffff;
+    --wash:        #f5f8fc;
+    --hot:         #d93025;
+    --warm:        #f9ab00;
+    --cool:        #5b6472;
+    --commit:      #1e8e3e;
+    --radius:      10px;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: var(--sans); color: var(--ink);
+    background: var(--wash); -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ top bar ============ */
+  header {
+    background: var(--navy); color: #fff; padding: 14px 24px;
+    display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 20;
+  }
+  header .logo { font-weight: 800; letter-spacing: -0.3px; font-size: 17px; }
+  header .logo span { color: var(--coral); }
+  header .sub { color: #9fb0d0; font-size: 12px; font-family: var(--mono); }
+  header .spacer { flex: 1; }
+  header button {
+    font-family: var(--sans); font-size: 13px; font-weight: 600;
+    border: 1px solid #2d3d66; background: var(--navy-2); color: #dce6f7;
+    padding: 7px 13px; border-radius: 8px; cursor: pointer;
+  }
+  header button:hover { border-color: var(--coral); color: #fff; }
+  header button.primary { background: var(--coral); border-color: var(--coral); color: #fff; }
+
+  /* ============ summary strip ============ */
+  .summary {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px;
+    background: var(--line); border-bottom: 1px solid var(--line);
+  }
+  .metric { background: var(--paper); padding: 16px 18px; }
+  .metric .n { font-size: 26px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .metric .n.coral { color: var(--coral); }
+  .metric .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
+
+  /* ============ layout ============ */
+  main { max-width: 1280px; margin: 0 auto; padding: 22px 24px 80px; }
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toolbar input[type=search] {
+    flex: 1; min-width: 200px; font-family: var(--sans); font-size: 14px;
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  .toolbar select {
+    font-family: var(--sans); font-size: 13px; padding: 9px 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+  }
+  .toolbar button.add {
+    font-family: var(--sans); font-weight: 700; font-size: 14px;
+    background: var(--coral); color: #fff; border: none; padding: 10px 16px;
+    border-radius: 8px; cursor: pointer;
+  }
+
+  /* ============ cards ============ */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 16px 14px; position: relative; transition: box-shadow .15s, transform .15s;
+    border-left: 4px solid var(--line);
+  }
+  .card:hover { box-shadow: 0 6px 22px rgba(15,27,61,.09); transform: translateY(-1px); }
+  .card.warm-Hot    { border-left-color: var(--hot); }
+  .card.warm-Warm   { border-left-color: var(--warm); }
+  .card.warm-Cool   { border-left-color: var(--cool); }
+  .card.warm-Cold   { border-left-color: #9aa3b2; }
+  .card.warm-Passed { border-left-color: #c2c8d2; opacity: .7; }
+
+  .card h3 { margin: 0 0 2px; font-size: 16px; letter-spacing: -.2px; }
+  .card .role { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip {
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+    background: var(--wash); color: var(--muted); border: 1px solid var(--line);
+  }
+  .chip.stage { background: #eef3fb; color: var(--navy); border-color: #d6e1f4; }
+  .chip.w-Hot    { background: #fdecea; color: var(--hot); border-color: #f7c8c2; }
+  .chip.w-Warm   { background: #fef4d8; color: #9a6a00; border-color: #f4e2a3; }
+  .chip.w-Cool   { background: #eef0f3; color: var(--cool); border-color: #dce0e6; }
+  .chip.w-Cold   { background: #eef0f3; color: #6b7480; }
+  .chip.w-Passed { background: #f1f2f4; color: #98a0ab; }
+
+  .field { font-size: 13px; margin: 7px 0; line-height: 1.4; }
+  .field .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; display: block; }
+  .field .v { color: var(--ink); }
+  .nextrow {
+    margin-top: 11px; padding-top: 11px; border-top: 1px dashed var(--line);
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  }
+  .nextrow .due { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .nextrow .due.overdue { color: var(--hot); font-weight: 700; }
+  .card .actions { margin-top: 12px; display: flex; gap: 8px; }
+  .card .actions button {
+    font-family: var(--sans); font-size: 12px; font-weight: 600; cursor: pointer;
+    padding: 6px 10px; border-radius: 7px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  }
+  .card .actions button:hover { border-color: var(--coral); color: var(--coral); }
+  .card .logcount { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
+  .empty b { color: var(--ink); }
+
+  /* ============ modal ============ */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(15,27,61,.45); display: none;
+    align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 50; overflow:auto;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 14px; width: 100%; max-width: 560px;
+    padding: 22px 24px 24px; box-shadow: 0 20px 60px rgba(15,27,61,.3);
+  }
+  .modal h2 { margin: 0 0 16px; font-size: 18px; }
+  .modal label { display: block; font-size: 12px; color: var(--muted); margin: 11px 0 4px; font-weight: 600; }
+  .modal input, .modal select, .modal textarea {
+    width: 100%; font-family: var(--sans); font-size: 14px; padding: 9px 11px;
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  .modal textarea { resize: vertical; min-height: 56px; }
+  .modal .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal .foot { margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; }
+  .modal .foot button {
+    font-family: var(--sans); font-size: 14px; font-weight: 700; padding: 10px 18px;
+    border-radius: 8px; cursor: pointer; border: 1px solid var(--line); background: #fff;
+  }
+  .modal .foot button.save { background: var(--coral); color: #fff; border-color: var(--coral); }
+
+  /* log section in modal */
+  .logblock { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .logblock h4 { margin: 0 0 8px; font-size: 13px; }
+  .logitem { font-size: 12px; padding: 7px 0; border-bottom: 1px dotted var(--line); }
+  .logitem .meta { font-family: var(--mono); color: var(--muted); }
+  .logadd { display: grid; grid-template-columns: 96px 110px 1fr; gap: 8px; margin-top: 8px; }
+  .logadd input, .logadd select { font-size: 12px; padding: 7px 8px; }
+  .logadd + button {
+    margin-top: 8px; font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 7px;
+    border: 1px solid var(--coral); background: #fff; color: var(--coral); cursor: pointer;
+  }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+  footer code { font-family: var(--mono); background: #eef1f6; padding: 2px 6px; border-radius: 5px; }
+
+  @media (max-width: 720px) {
+    .summary { grid-template-columns: repeat(3, 1fr); }
+    header .sub { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Principal <span>AI</span></div>
+  <div class="sub">investor pipeline</div>
+  <div class="spacer"></div>
+  <button id="exportBtn">Export JSON</button>
+  <button id="importBtn">Import JSON</button>
+  <input type="file" id="importFile" accept="application/json" style="display:none" />
+  <button class="primary" id="addBtnTop">+ Add investor</button>
+</header>
+
+<section class="summary" id="summary"></section>
+
+<main>
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search investors, notes, objections…" />
+    <select id="filterWarmth">
+      <option value="">All warmth</option>
+      <option>Hot</option><option>Warm</option><option>Cool</option><option>Cold</option><option>Passed</option>
+    </select>
+    <select id="filterStage">
+      <option value="">All stages</option>
+      <option>Researching</option><option>Met - warm</option><option>Met - interested</option>
+      <option>Met - feedback only</option><option>Met - cool</option>
+      <option>Verbal commit</option><option>Committed</option><option>Passed</option>
+    </select>
+    <select id="sortBy">
+      <option value="due">Sort: next action due</option>
+      <option value="warmth">Sort: warmth</option>
+      <option value="firm">Sort: name</option>
+    </select>
+    <button class="add" id="addBtn">+ Add investor</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    <p><b>No investors match.</b><br/>Clear the filters, or add a new relationship to start tracking it.</p>
+  </div>
+</main>
+
+<footer>
+  Data lives in this browser session. Use <code>Export JSON</code> to save your work and commit it to the repo as <code>data/pipeline.json</code>.
+</footer>
+
+<!-- edit / add modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add investor</h2>
+    <input type="hidden" id="f-id" />
+    <div class="two">
+      <div><label>Investor / firm</label><input id="f-firm" /></div>
+      <div><label>Contact</label><input id="f-contact" /></div>
+    </div>
+    <div class="two">
+      <div><label>Role</label><input id="f-role" /></div>
+      <div><label>Met where</label><input id="f-metWhere" /></div>
+    </div>
+    <div class="two">
+      <div><label>Stage</label>
+        <select id="f-stage">
+          <option>Researching</option><option>Met - warm</option><option>Met - interested</option>
+          <option>Met - feedback only</option><option>Met - cool</option>
+          <option>Verbal commit</option><option>Committed</option><option>Passed</option>
+        </select>
+      </div>
+      <div><label>Warmth</label>
+        <select id="f-warmth"><option>Hot</option><option>Warm</option><option>Cool</option><option>Cold</option><option>Passed</option></select>
+      </div>
+    </div>
+    <label>Their stated objection</label><input id="f-objection" />
+    <label>What we owe them</label><input id="f-owed" />
+    <div class="two">
+      <div><label>Last contact</label><input id="f-lastContact" type="date" /></div>
+      <div><label>Next action due</label><input id="f-nextDue" type="date" /></div>
+    </div>
+    <label>Next action</label><input id="f-nextAction" />
+    <div class="two">
+      <div><label>Owner</label><input id="f-owner" value="Hayden" /></div>
+    </div>
+    <label>Notes</label><textarea id="f-notes"></textarea>
+
+    <div class="logblock" id="logblock">
+      <h4>Touchpoint log</h4>
+      <div id="logList"></div>
+      <div class="logadd">
+        <input id="log-date" type="date" />
+        <select id="log-type"><option>Email</option><option>Call</option><option>Meeting</option><option>Text</option><option>LinkedIn</option><option>Intro</option></select>
+        <input id="log-what" placeholder="What happened" />
+      </div>
+      <button id="addLogBtn">+ Log touchpoint</button>
+    </div>
+
+    <div class="foot">
+      <button id="deleteBtn" style="margin-right:auto;color:var(--hot);border-color:#f3c9c4">Delete</button>
+      <button id="cancelBtn">Cancel</button>
+      <button class="save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="seed-data.js"></script>
+<script>
+/* ============ state ============ */
+let investors = [];
+let editingId = null;
+let pendingLog = []; // log entries staged while editing
+
+function load() {
+  // session-only in-memory; seeded from seed-data.js. Export/Import to persist.
+  investors = JSON.parse(JSON.stringify(window.SEED_INVESTORS || []));
+}
+
+/* ============ helpers ============ */
+const $ = id => document.getElementById(id);
+const today = () => new Date().toISOString().slice(0,10);
+function isOverdue(d){ return d && d < today(); }
+function esc(s){ return (s||"").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ============ render ============ */
+function renderSummary() {
+  const n = investors.length;
+  const count = w => investors.filter(i => i.warmth === w).length;
+  const commits = investors.filter(i => i.stage === "Verbal commit" || i.stage === "Committed").length;
+  const overdue = investors.filter(i => isOverdue(i.nextDue)).length;
+  const cells = [
+    ["Tracked", n, false],
+    ["Hot", count("Hot"), true],
+    ["Warm", count("Warm"), false],
+    ["Cool / Cold", count("Cool")+count("Cold"), false],
+    ["Commits", commits, true],
+    ["Overdue", overdue, overdue>0],
+  ];
+  $("summary").innerHTML = cells.map(([l,v,coral]) =>
+    `<div class="metric"><div class="n ${coral?'coral':''}">${v}</div><div class="l">${l}</div></div>`
+  ).join("");
+}
+
+function cardHTML(i) {
+  const overdue = isOverdue(i.nextDue);
+  return `<div class="card warm-${esc(i.warmth)}" data-id="${i.id}">
+    <h3>${esc(i.firm)}</h3>
+    <div class="role">${esc(i.role)}${i.contact && i.contact!=='—' ? ' · '+esc(i.contact) : ''}</div>
+    <div class="chips">
+      <span class="chip stage">${esc(i.stage)}</span>
+      <span class="chip w-${esc(i.warmth)}">${esc(i.warmth)}</span>
+    </div>
+    ${i.objection && i.objection!=='—' ? `<div class="field"><span class="k">Their objection</span><span class="v">${esc(i.objection)}</span></div>`:''}
+    ${i.owed && i.owed!=='—' ? `<div class="field"><span class="k">We owe them</span><span class="v">${esc(i.owed)}</span></div>`:''}
+    <div class="nextrow">
+      <span class="v" style="font-size:13px">${esc(i.nextAction||'—')}</span>
+      <span class="due ${overdue?'overdue':''}">${i.nextDue?esc(i.nextDue):''}</span>
+    </div>
+    <div class="actions">
+      <button data-edit="${i.id}">Open</button>
+      <span class="logcount">${(i.log||[]).length} touchpoint${(i.log||[]).length===1?'':'s'}</span>
+    </div>
+  </div>`;
+}
+
+function applyFilters(list) {
+  const q = $("search").value.toLowerCase().trim();
+  const fw = $("filterWarmth").value;
+  const fs = $("filterStage").value;
+  let out = list.filter(i => {
+    if (fw && i.warmth !== fw) return false;
+    if (fs && i.stage !== fs) return false;
+    if (q) {
+      const hay = [i.firm,i.contact,i.role,i.objection,i.owed,i.nextAction,i.notes].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const sort = $("sortBy").value;
+  const warmthOrder = {Hot:0,Warm:1,Cool:2,Cold:3,Passed:4};
+  out.sort((a,b) => {
+    if (sort==="warmth") return (warmthOrder[a.warmth]??9)-(warmthOrder[b.warmth]??9);
+    if (sort==="firm") return a.firm.localeCompare(b.firm);
+    // due: overdue/soonest first, blanks last
+    const ad=a.nextDue||"9999", bd=b.nextDue||"9999"; return ad.localeCompare(bd);
+  });
+  return out;
+}
+
+function render() {
+  renderSummary();
+  const list = applyFilters(investors);
+  $("grid").innerHTML = list.map(cardHTML).join("");
+  $("empty").style.display = list.length ? "none" : "block";
+  document.querySelectorAll("[data-edit]").forEach(b =>
+    b.addEventListener("click", () => openModal(b.getAttribute("data-edit"))));
+}
+
+/* ============ modal ============ */
+function openModal(id) {
+  editingId = id || null;
+  const i = id ? investors.find(x=>x.id===id) : null;
+  $("modalTitle").textContent = i ? "Edit investor" : "Add investor";
+  $("f-id").value = i?.id || "";
+  const set = (f,v) => $(f).value = v ?? "";
+  set("f-firm", i?.firm); set("f-contact", i?.contact); set("f-role", i?.role);
+  set("f-metWhere", i?.metWhere); set("f-stage", i?.stage || "Researching");
+  set("f-warmth", i?.warmth || "Warm"); set("f-objection", i?.objection);
+  set("f-owed", i?.owed); set("f-lastContact", i?.lastContact); set("f-nextDue", i?.nextDue);
+  set("f-nextAction", i?.nextAction); set("f-owner", i?.owner || "Hayden"); set("f-notes", i?.notes);
+  pendingLog = i ? JSON.parse(JSON.stringify(i.log||[])) : [];
+  $("log-date").value = today();
+  $("deleteBtn").style.display = i ? "block" : "none";
+  renderLog();
+  $("overlay").classList.add("open");
+}
+function closeModal(){ $("overlay").classList.remove("open"); editingId=null; }
+
+function renderLog() {
+  $("logList").innerHTML = pendingLog.length
+    ? pendingLog.slice().reverse().map(l =>
+        `<div class="logitem"><span class="meta">${esc(l.date)} · ${esc(l.type)}</span> — ${esc(l.what)}${l.outcome?` <em style="color:var(--muted)">(${esc(l.outcome)})</em>`:''}</div>`).join("")
+    : `<div style="font-size:12px;color:var(--muted)">No touchpoints logged yet.</div>`;
+}
+
+function saveModal() {
+  const get = f => $(f).value.trim();
+  const rec = {
+    id: editingId || ("inv-" + Date.now()),
+    firm: get("f-firm") || "Untitled",
+    contact: get("f-contact") || "—",
+    role: get("f-role"), metWhere: get("f-metWhere"),
+    stage: get("f-stage"), warmth: get("f-warmth"),
+    objection: get("f-objection") || "—", owed: get("f-owed") || "—",
+    lastContact: get("f-lastContact"), nextDue: get("f-nextDue"),
+    nextAction: get("f-nextAction"), owner: get("f-owner") || "Hayden",
+    notes: get("f-notes"), log: pendingLog
+  };
+  if (editingId) {
+    const idx = investors.findIndex(x=>x.id===editingId);
+    investors[idx] = rec;
+  } else {
+    investors.unshift(rec);
+  }
+  closeModal(); render();
+}
+
+/* ============ events ============ */
+$("addBtn").onclick = () => openModal(null);
+$("addBtnTop").onclick = () => openModal(null);
+$("cancelBtn").onclick = closeModal;
+$("saveBtn").onclick = saveModal;
+$("overlay").addEventListener("click", e => { if (e.target === $("overlay")) closeModal(); });
+$("deleteBtn").onclick = () => {
+  if (editingId && confirm("Delete this investor from the pipeline?")) {
+    investors = investors.filter(x=>x.id!==editingId); closeModal(); render();
+  }
+};
+$("addLogBtn").onclick = () => {
+  const d = $("log-date").value, t = $("log-type").value, w = $("log-what").value.trim();
+  if (!w) return;
+  pendingLog.push({ date: d || today(), type: t, what: w, outcome: "" });
+  $("log-what").value = ""; renderLog();
+};
+["search","filterWarmth","filterStage","sortBy"].forEach(id => $(id).addEventListener("input", render));
+
+/* export / import for persistence (no browser storage; commit the file to the repo) */
+$("exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify(investors, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "pipeline.json"; a.click();
+};
+$("importBtn").onclick = () => $("importFile").click();
+$("importFile").onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => { try { investors = JSON.parse(r.result); render(); } catch { alert("That file isn't valid pipeline JSON."); } };
+  r.readAsText(file);
+};
+
+/* ============ boot ============ */
+load(); render();
+</script>
+</body>
+</html>
