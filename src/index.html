@@ -217,6 +217,7 @@
   <button id="exportBtn">Export JSON</button>
   <button id="importBtn">Import JSON</button>
   <input type="file" id="importFile" accept="application/json" style="display:none" />
+  <button id="saveRepoBtn">Save to repo</button>
   <button class="primary" id="addBtnTop">+ Add investor</button>
 </header>
 
@@ -278,7 +279,7 @@
 </div>
 
 <footer>
-  Data lives in this browser session. Use <code>Export JSON</code> to save your work and commit it to the repo as <code>data/pipeline.json</code>.
+  Changes auto-save to your browser. Click <strong>Save to repo</strong> to commit them to GitHub for the team.
 </footer>
 
 <!-- edit / add modal -->
@@ -586,6 +587,40 @@ $("exportBtn").onclick = () => {
   a.href = URL.createObjectURL(blob); a.download = "pipeline.json"; a.click();
 };
 $("importBtn").onclick = () => $("importFile").click();
+
+/* save to repo via GitHub API */
+$("saveRepoBtn").onclick = async () => {
+  let token = localStorage.getItem("github_token");
+  if (!token) {
+    token = prompt("Enter a GitHub Personal Access Token (classic) with repo scope for hfritz002/Opurtunities:\nGenerate one at https://github.com/settings/tokens - needs 'repo' or 'public_repo' scope.\n\nTip: you only need to enter this once — it's saved in your browser.");
+    if (!token) return;
+    localStorage.setItem("github_token", token);
+  }
+  const btn = $("saveRepoBtn");
+  const orig = btn.textContent;
+  btn.textContent = "Saving…"; btn.disabled = true;
+  try {
+    const json = JSON.stringify(exportData(), null, 2);
+    const enc = btoa(unescape(encodeURIComponent(json)));
+    const getR = await fetch("https://api.github.com/repos/hfritz002/Opurtunities/contents/data/pipeline.json", {
+      headers: { Authorization: "token " + token, Accept: "application/vnd.github.v3+json" }
+    });
+    let sha = "";
+    if (getR.ok) { const m = await getR.json(); sha = m.sha; }
+    const putR = await fetch("https://api.github.com/repos/hfritz002/Opurtunities/contents/data/pipeline.json", {
+      method: "PUT",
+      headers: { Authorization: "token " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "update pipeline data", content: enc, sha: sha || undefined })
+    });
+    if (putR.ok) {
+      btn.textContent = "✓ Saved to repo"; setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+    } else {
+      const e = await putR.json(); alert("Save failed: " + (e.message || "unknown"));
+      btn.textContent = orig; btn.disabled = false;
+      if (e.message && e.message.includes("Bad credentials")) localStorage.removeItem("github_token");
+    }
+  } catch (e) { alert("Save failed: " + e.message); btn.textContent = orig; btn.disabled = false; }
+};
 $("importFile").onchange = e => {
   const file = e.target.files[0]; if (!file) return;
   const r = new FileReader();
