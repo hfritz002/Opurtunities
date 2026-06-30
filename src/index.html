@@ -164,9 +164,44 @@
   footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
   footer code { font-family: var(--mono); background: #eef1f6; padding: 2px 6px; border-radius: 5px; }
 
+  /* ============ tabs ============ */
+  .tabs { display: flex; gap: 2px; margin-left: 18px; }
+  .tabs button {
+    font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 7px 14px; border: none; background: transparent; color: #9fb0d0;
+    border-bottom: 2px solid transparent; transition: color .15s;
+  }
+  .tabs button.active { color: #fff; border-bottom-color: var(--coral); }
+  .tabs button:hover { color: #dce6f7; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ============ accelerator-specific ============ */
+  .card .deadline { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .card .deadline.urgent { color: var(--hot); }
+  .chip.s-Not-started { background: #f1f2f4; color: #98a0ab; }
+  .chip.s-Drafting { background: #fef4d8; color: #9a6a00; border-color: #f4e2a3; }
+  .chip.s-Submitted { background: #dff0fa; color: #1a5a8c; border-color: #b3d4f0; }
+  .chip.s-Interview { background: #e8f5e9; color: #1e8e3e; border-color: #b7e4c0; }
+  .chip.s-Accepted { background: #e8f5e9; color: #1e8e3e; border-color: #b7e4c0; }
+  .chip.s-Rejected { background: #fdecea; color: var(--hot); border-color: #f7c8c2; }
+  .card .materials-count { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .materials-block { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .materials-block h4 { margin: 0 0 8px; font-size: 13px; }
+  .material-item { font-size: 12px; padding: 5px 0; border-bottom: 1px dotted var(--line); }
+  .material-item .meta { font-family: var(--mono); color: var(--muted); }
+  .material-add { display: grid; grid-template-columns: 96px 1fr; gap: 8px; margin-top: 8px; }
+  .material-add input { font-size: 12px; padding: 7px 8px; }
+  .material-add + button {
+    margin-top: 8px; font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 7px;
+    border: 1px solid var(--coral); background: #fff; color: var(--coral); cursor: pointer;
+  }
+
   @media (max-width: 720px) {
     .summary { grid-template-columns: repeat(3, 1fr); }
     header .sub { display: none; }
+    .tabs { margin-left: 8px; }
+    .tabs button { font-size: 12px; padding: 6px 10px; }
   }
 </style>
 </head>
@@ -174,6 +209,10 @@
 <header>
   <div class="logo">Principal <span>AI</span></div>
   <div class="sub">investor pipeline</div>
+  <div class="tabs">
+    <button class="active" data-tab="pipeline">Pipeline</button>
+    <button data-tab="accelerators">Accelerators</button>
+  </div>
   <div class="spacer"></div>
   <button id="exportBtn">Export JSON</button>
   <button id="importBtn">Import JSON</button>
@@ -181,33 +220,62 @@
   <button class="primary" id="addBtnTop">+ Add investor</button>
 </header>
 
-<section class="summary" id="summary"></section>
+<div class="view active" id="pipelineView">
+  <section class="summary" id="summary"></section>
+  <main>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Search investors, notes, objections…" />
+      <select id="filterWarmth">
+        <option value="">All warmth</option>
+        <option>Hot</option><option>Warm</option><option>Cool</option><option>Cold</option><option>Passed</option>
+      </select>
+      <select id="filterStage">
+        <option value="">All stages</option>
+        <option>Researching</option><option>Met - warm</option><option>Met - interested</option>
+        <option>Met - feedback only</option><option>Met - cool</option>
+        <option>Verbal commit</option><option>Committed</option><option>Passed</option>
+      </select>
+      <select id="sortBy">
+        <option value="due">Sort: next action due</option>
+        <option value="warmth">Sort: warmth</option>
+        <option value="firm">Sort: name</option>
+      </select>
+      <button class="add" id="addBtn">+ Add investor</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">
+      <p><b>No investors match.</b><br/>Clear the filters, or add a new relationship to start tracking it.</p>
+    </div>
+  </main>
+</div>
 
-<main>
-  <div class="toolbar">
-    <input type="search" id="search" placeholder="Search investors, notes, objections…" />
-    <select id="filterWarmth">
-      <option value="">All warmth</option>
-      <option>Hot</option><option>Warm</option><option>Cool</option><option>Cold</option><option>Passed</option>
-    </select>
-    <select id="filterStage">
-      <option value="">All stages</option>
-      <option>Researching</option><option>Met - warm</option><option>Met - interested</option>
-      <option>Met - feedback only</option><option>Met - cool</option>
-      <option>Verbal commit</option><option>Committed</option><option>Passed</option>
-    </select>
-    <select id="sortBy">
-      <option value="due">Sort: next action due</option>
-      <option value="warmth">Sort: warmth</option>
-      <option value="firm">Sort: name</option>
-    </select>
-    <button class="add" id="addBtn">+ Add investor</button>
-  </div>
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" style="display:none">
-    <p><b>No investors match.</b><br/>Clear the filters, or add a new relationship to start tracking it.</p>
-  </div>
-</main>
+<div class="view" id="acceleratorsView">
+  <section class="summary" id="acc-summary"></section>
+  <main>
+    <div class="toolbar">
+      <input type="search" id="acc-search" placeholder="Search accelerators, notes…" />
+      <select id="acc-filterStatus">
+        <option value="">All statuses</option>
+        <option>Not started</option><option>Researching</option><option>Drafting</option>
+        <option>Submitted</option><option>Interview</option><option>Accepted</option><option>Rejected</option>
+      </select>
+      <select id="acc-filterFirm">
+        <option value="">All programs</option>
+        <option>YC</option><option>A16Z</option><option>Pear VC</option><option>Techstars</option><option>500 Global</option>
+      </select>
+      <select id="acc-sortBy">
+        <option value="deadline">Sort: deadline</option>
+        <option value="status">Sort: status</option>
+        <option value="program">Sort: program</option>
+      </select>
+      <button class="add" id="addAccBtn">+ Add accelerator</button>
+    </div>
+    <div class="grid" id="acc-grid"></div>
+    <div class="empty" id="acc-empty" style="display:none">
+      <p><b>No accelerators yet.</b><br/>Add an accelerator program to start tracking deadlines and submissions.</p>
+    </div>
+  </main>
+</div>
 
 <footer>
   Data lives in this browser session. Use <code>Export JSON</code> to save your work and commit it to the repo as <code>data/pipeline.json</code>.
@@ -265,6 +333,63 @@
       <button id="deleteBtn" style="margin-right:auto;color:var(--hot);border-color:#f3c9c4">Delete</button>
       <button id="cancelBtn">Cancel</button>
       <button class="save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- accelerator modal -->
+<div class="overlay" id="acc-overlay">
+  <div class="modal">
+    <h2 id="accModalTitle">Add accelerator</h2>
+    <input type="hidden" id="acc-id" />
+    <div class="two">
+      <div><label>Program name</label><input id="acc-program" placeholder="YC Summer 2026" /></div>
+      <div><label>Accelerator</label>
+        <select id="acc-firm">
+          <option>YC</option><option>A16Z</option><option>Pear VC</option><option>Techstars</option><option>500 Global</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="two">
+      <div><label>Deadline</label><input id="acc-deadline" type="date" /></div>
+      <div><label>Status</label>
+        <select id="acc-status">
+          <option>Not started</option><option>Researching</option><option>Drafting</option>
+          <option>Submitted</option><option>Interview</option><option>Accepted</option><option>Rejected</option>
+        </select>
+      </div>
+    </div>
+    <label>Contact (who we know there)</label><input id="acc-contact" />
+    <label>Notes</label><textarea id="acc-notes"></textarea>
+    <label>Owner</label><input id="acc-owner" value="Hayden" />
+
+    <!-- materials -->
+    <div class="materials-block" id="materialsBlock">
+      <h4>Materials sent</h4>
+      <div id="materialsList"></div>
+      <div class="material-add">
+        <input id="mat-date" type="date" />
+        <input id="mat-item" placeholder="Deck v2, financials, etc." />
+      </div>
+      <button id="addMatBtn">+ Add material</button>
+    </div>
+
+    <!-- log -->
+    <div class="logblock" id="acc-logblock">
+      <h4>Touchpoint log</h4>
+      <div id="acc-logList"></div>
+      <div class="logadd">
+        <input id="acc-log-date" type="date" />
+        <select id="acc-log-type"><option>Email</option><option>Call</option><option>Meeting</option><option>Application</option><option>Internal</option></select>
+        <input id="acc-log-what" placeholder="What happened" />
+      </div>
+      <button id="addAccLogBtn">+ Log touchpoint</button>
+    </div>
+
+    <div class="foot">
+      <button id="acc-deleteBtn" style="margin-right:auto;color:var(--hot);border-color:#f3c9c4">Delete</button>
+      <button id="acc-cancelBtn">Cancel</button>
+      <button class="save" id="acc-saveBtn">Save</button>
     </div>
   </div>
 </div>
@@ -430,8 +555,16 @@ $("addLogBtn").onclick = () => {
 ["search","filterWarmth","filterStage","sortBy"].forEach(id => $(id).addEventListener("input", render));
 
 /* export / import for persistence (no browser storage; commit the file to the repo) */
+function exportData() {
+  return { investors, accelerators };
+}
+function importData(data) {
+  if (data.investors) investors = data.investors;
+  if (data.accelerators) accelerators = data.accelerators;
+}
+
 $("exportBtn").onclick = () => {
-  const blob = new Blob([JSON.stringify(investors, null, 2)], {type:"application/json"});
+  const blob = new Blob([JSON.stringify(exportData(), null, 2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = "pipeline.json"; a.click();
 };
@@ -439,12 +572,219 @@ $("importBtn").onclick = () => $("importFile").click();
 $("importFile").onchange = e => {
   const file = e.target.files[0]; if (!file) return;
   const r = new FileReader();
-  r.onload = () => { try { investors = JSON.parse(r.result); render(); } catch { alert("That file isn't valid pipeline JSON."); } };
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (Array.isArray(data)) {
+        investors = data;
+      } else {
+        importData(data);
+      }
+      render();
+      if (currentTab === "accelerators") renderAccelerators();
+    } catch { alert("That file isn't valid pipeline JSON."); }
+  };
   r.readAsText(file);
 };
 
+/* ============ accelerator state ============ */
+let accelerators = [];
+let accEditingId = null;
+let pendingMaterials = [];
+let accPendingLog = [];
+
+function loadAccelerators() {
+  accelerators = JSON.parse(JSON.stringify(window.SEED_ACCELERATORS || []));
+}
+
+/* ============ accelerator render ============ */
+function accStatusClass(s) {
+  return "s-" + esc(s).replace(/\s+/g, "-");
+}
+
+function renderAcceleratorSummary() {
+  const n = accelerators.length;
+  const byStatus = s => accelerators.filter(a => a.status === s).length;
+  const upcoming = accelerators.filter(a => a.deadline && a.deadline >= today()).length;
+  const submitted = byStatus("Submitted") + byStatus("Interview");
+  const cells = [
+    ["Tracked", n, false],
+    ["Drafting", byStatus("Drafting"), true],
+    ["Submitted", submitted, false],
+    ["Upcoming", upcoming, true],
+    ["Accepted", byStatus("Accepted"), false],
+  ];
+  $("acc-summary").innerHTML = cells.map(([l,v,c]) =>
+    `<div class="metric"><div class="n ${c?'coral':''}">${v}</div><div class="l">${l}</div></div>`
+  ).join("");
+}
+
+function accCardHTML(a) {
+  const urgent = a.deadline && a.deadline < today();
+  return `<div class="card" data-acc-id="${a.id}">
+    <h3>${esc(a.program)}</h3>
+    <div class="role">${esc(a.firm)}${a.contact && a.contact!=='—' ? ' · '+esc(a.contact) : ''}</div>
+    <div class="chips">
+      <span class="chip ${accStatusClass(a.status)}">${esc(a.status)}</span>
+    </div>
+    <div class="field"><span class="k">Deadline</span><span class="deadline ${urgent?'urgent':''} v">${esc(a.deadline||'—')}</span></div>
+    <div class="field"><span class="k">Materials sent</span><span class="materials-count v">${(a.materials||[]).length} item${(a.materials||[]).length===1?'':'s'}</span></div>
+    ${a.notes ? `<div class="field"><span class="k">Notes</span><span class="v">${esc(a.notes)}</span></div>` : ''}
+    <div class="actions">
+      <button data-acc-edit="${a.id}">Open</button>
+      <span class="logcount">${(a.log||[]).length} touchpoint${(a.log||[]).length===1?'':'s'}</span>
+    </div>
+  </div>`;
+}
+
+function applyAccFilters(list) {
+  const q = $("acc-search").value.toLowerCase().trim();
+  const fs = $("acc-filterStatus").value;
+  const ff = $("acc-filterFirm").value;
+  let out = list.filter(a => {
+    if (fs && a.status !== fs) return false;
+    if (ff && a.firm !== ff) return false;
+    if (q) {
+      const hay = [a.program, a.firm, a.contact, a.notes].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const sort = $("acc-sortBy").value;
+  const statusOrder = {"Not started":0, Researching:1, Drafting:2, Submitted:3, Interview:4, Accepted:5, Rejected:6};
+  out.sort((a,b) => {
+    if (sort==="status") return (statusOrder[a.status]??9)-(statusOrder[b.status]??9);
+    if (sort==="program") return a.program.localeCompare(b.program);
+    const ad=a.deadline||"9999", bd=b.deadline||"9999"; return ad.localeCompare(bd);
+  });
+  return out;
+}
+
+function renderAccelerators() {
+  renderAcceleratorSummary();
+  const list = applyAccFilters(accelerators);
+  $("acc-grid").innerHTML = list.map(accCardHTML).join("");
+  $("acc-empty").style.display = list.length ? "none" : "block";
+  document.querySelectorAll("[data-acc-edit]").forEach(b =>
+    b.addEventListener("click", () => openAcceleratorModal(b.getAttribute("data-acc-edit"))));
+}
+
+/* ============ accelerator modal ============ */
+function openAcceleratorModal(id) {
+  accEditingId = id || null;
+  const a = id ? accelerators.find(x=>x.id===id) : null;
+  $("accModalTitle").textContent = a ? "Edit accelerator" : "Add accelerator";
+  $("acc-id").value = a?.id || "";
+  const set = (f,v) => $(f).value = v ?? "";
+  set("acc-program", a?.program);
+  set("acc-firm", a?.firm || "YC");
+  set("acc-deadline", a?.deadline);
+  set("acc-status", a?.status || "Not started");
+  set("acc-contact", a?.contact);
+  set("acc-notes", a?.notes);
+  set("acc-owner", a?.owner || "Hayden");
+  pendingMaterials = a ? JSON.parse(JSON.stringify(a.materials||[])) : [];
+  accPendingLog = a ? JSON.parse(JSON.stringify(a.log||[])) : [];
+  $("mat-date").value = today();
+  $("acc-log-date").value = today();
+  $("acc-deleteBtn").style.display = a ? "block" : "none";
+  renderMaterials();
+  renderAccLog();
+  $("acc-overlay").classList.add("open");
+}
+
+function closeAcceleratorModal() {
+  $("acc-overlay").classList.remove("open");
+  accEditingId = null;
+}
+
+function renderMaterials() {
+  $("materialsList").innerHTML = pendingMaterials.length
+    ? pendingMaterials.slice().reverse().map(m =>
+        `<div class="material-item"><span class="meta">${esc(m.date)}</span> — ${esc(m.item)}</div>`).join("")
+    : `<div style="font-size:12px;color:var(--muted)">No materials logged yet.</div>`;
+}
+
+function renderAccLog() {
+  $("acc-logList").innerHTML = accPendingLog.length
+    ? accPendingLog.slice().reverse().map(l =>
+        `<div class="logitem"><span class="meta">${esc(l.date)} · ${esc(l.type)}</span> — ${esc(l.what)}${l.outcome?` <em style="color:var(--muted)">(${esc(l.outcome)})</em>`:''}</div>`).join("")
+    : `<div style="font-size:12px;color:var(--muted)">No touchpoints logged yet.</div>`;
+}
+
+function saveAcceleratorModal() {
+  const get = f => $(f).value.trim();
+  const rec = {
+    id: accEditingId || ("acc-" + Date.now()),
+    program: get("acc-program") || "Untitled",
+    firm: get("acc-firm") || "Other",
+    deadline: get("acc-deadline"),
+    status: get("acc-status") || "Not started",
+    contact: get("acc-contact") || "—",
+    notes: get("acc-notes"),
+    owner: get("acc-owner") || "Hayden",
+    materials: pendingMaterials,
+    log: accPendingLog
+  };
+  if (accEditingId) {
+    const idx = accelerators.findIndex(x=>x.id===accEditingId);
+    accelerators[idx] = rec;
+  } else {
+    accelerators.unshift(rec);
+  }
+  closeAcceleratorModal();
+  renderAccelerators();
+}
+
+/* ============ accelerator events ============ */
+$("addAccBtn").onclick = () => openAcceleratorModal(null);
+$("acc-cancelBtn").onclick = closeAcceleratorModal;
+$("acc-saveBtn").onclick = saveAcceleratorModal;
+$("acc-overlay").addEventListener("click", e => { if (e.target === $("acc-overlay")) closeAcceleratorModal(); });
+$("acc-deleteBtn").onclick = () => {
+  if (accEditingId && confirm("Delete this accelerator?")) {
+    accelerators = accelerators.filter(x=>x.id!==accEditingId);
+    closeAcceleratorModal();
+    renderAccelerators();
+  }
+};
+$("addMatBtn").onclick = () => {
+  const d = $("mat-date").value, w = $("mat-item").value.trim();
+  if (!w) return;
+  pendingMaterials.push({ date: d || today(), item: w });
+  $("mat-item").value = "";
+  renderMaterials();
+};
+$("addAccLogBtn").onclick = () => {
+  const d = $("acc-log-date").value, t = $("acc-log-type").value, w = $("acc-log-what").value.trim();
+  if (!w) return;
+  accPendingLog.push({ date: d || today(), type: t, what: w, outcome: "" });
+  $("acc-log-what").value = "";
+  renderAccLog();
+};
+["acc-search","acc-filterStatus","acc-filterFirm","acc-sortBy"].forEach(id =>
+  $(id).addEventListener("input", renderAccelerators));
+
+/* ============ tab switching ============ */
+let currentTab = "pipeline";
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tabs button").forEach(b => {
+    b.classList.toggle("active", b.getAttribute("data-tab") === tab);
+  });
+  document.querySelectorAll(".view").forEach(v => {
+    v.classList.toggle("active", v.id === tab + "View");
+  });
+  if (tab === "accelerators") renderAccelerators();
+}
+
+document.querySelectorAll(".tabs button").forEach(b =>
+  b.addEventListener("click", () => switchTab(b.getAttribute("data-tab"))));
+
 /* ============ boot ============ */
 load(); render();
+loadAccelerators();
 </script>
 </body>
 </html>

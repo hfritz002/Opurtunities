@@ -93,3 +93,154 @@ window.SEED_INVESTORS = [
     log: []
   }
 ];
+
+window.SEED_ACCELERATORS = [
+  {
+    id: "acc-001",
+    program: "YC Fall 2026",
+    firm: "YC",
+    deadline: "2026-07-27",
+    status: "Drafting",
+    contact: "—",
+    materials: [
+      { date: "2026-06-20", item: "Initial draft of application" }
+    ],
+    notes: "On-time deadline Jul 27, 8pm PT. $500K for 7%. Batch Oct-Dec in SF. AI strongly preferred.",
+    owner: "Hayden",
+    log: [
+      { date: "2026-06-20", type: "Internal", what: "Started drafting application", outcome: "" }
+    ]
+  },
+  {
+    id: "acc-002",
+    program: "Techstars Fall 2026",
+    firm: "Techstars",
+    deadline: "2026-08-15",
+    status: "Researching",
+    contact: "—",
+    materials: [],
+    notes: "40+ vertical accelerators. $220K investment. Apply by Aug 15.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-003",
+    program: "South Park Commons Fellowship",
+    firm: "SPC",
+    deadline: "2026-08-01",
+    status: "Researching",
+    contact: "—",
+    materials: [],
+    notes: "Pre-seed pre-idea program. $400K for 7% + $600K follow-on. SF/NYC/India. Batch starts Oct.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-004",
+    program: "Google AI First Accelerator",
+    firm: "Google",
+    deadline: "2026-09-01",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "Equity-free. $350K in GCP + AI model credits. 10 weeks. Rolling cohorts globally.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-005",
+    program: "500 Global Founders Fund",
+    firm: "500 Global",
+    deadline: "2026-09-01",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "Late seed to Series A. Apply by Sep 1.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-006",
+    program: "YC Winter 2027",
+    firm: "YC",
+    deadline: "2026-09-25",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "Early decision for Winter 2027. Apply by Sep 25.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-007",
+    program: "Sequoia Arc",
+    firm: "Sequoia",
+    deadline: "2026-10-01",
+    status: "Researching",
+    contact: "—",
+    materials: [],
+    notes: "Pre-seed/seed from Sequoia. Variable terms. Next cohort TBD — sign up for notification. Arc Intensive: 4-day program for accepted founders.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-008",
+    program: "HF0 Residency",
+    firm: "HF0",
+    deadline: "—",
+    status: "Researching",
+    contact: "—",
+    materials: [],
+    notes: "12-week residency for 2nd-time founders. $1M uncapped SAFE + 5% equity fee. Rolling, SF. High bar.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-009",
+    program: "NVIDIA Inception",
+    firm: "NVIDIA",
+    deadline: "—",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "Rolling. GPU credits, enterprise partnerships, no equity. Must-have for AI infra startups.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-010",
+    program: "Plug and Play AI",
+    firm: "Plug and Play",
+    deadline: "—",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "Rolling applications. Corporate pilot programs + investment. Global network, industry-specific tracks.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-011",
+    program: "MassChallenge",
+    firm: "MassChallenge",
+    deadline: "—",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "Rolling. Equity-free accelerator. Cash prizes + mentorship. Strong for early-stage AI.",
+    owner: "Hayden",
+    log: []
+  },
+  {
+    id: "acc-012",
+    program: "Fetch.ai Startup Accelerator",
+    firm: "Fetch.ai",
+    deadline: "—",
+    status: "Not started",
+    contact: "—",
+    materials: [],
+    notes: "$10M pool for AI agent startups. Rolling. Agent-native focus is a direct fit.",
+    owner: "Hayden",
+    log: []
+  }
+];
