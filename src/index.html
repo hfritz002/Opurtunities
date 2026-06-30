@@ -401,8 +401,14 @@ let investors = [];
 let editingId = null;
 let pendingLog = []; // log entries staged while editing
 
-function load() {
-  // session-only in-memory; seeded from seed-data.js. Export/Import to persist.
+async function load() {
+  try {
+    const r = await fetch("data/pipeline.json");
+    if (r.ok) {
+      const data = await r.json();
+      if (data.investors) { investors = data.investors; return; }
+    }
+  } catch {}
   investors = JSON.parse(JSON.stringify(window.SEED_INVESTORS || []));
 }
 
@@ -593,7 +599,14 @@ let accEditingId = null;
 let pendingMaterials = [];
 let accPendingLog = [];
 
-function loadAccelerators() {
+async function loadAccelerators() {
+  try {
+    const r = await fetch("data/pipeline.json");
+    if (r.ok) {
+      const data = await r.json();
+      if (data.accelerators) { accelerators = data.accelerators; return; }
+    }
+  } catch {}
   accelerators = JSON.parse(JSON.stringify(window.SEED_ACCELERATORS || []));
 }
 
@@ -783,8 +796,11 @@ document.querySelectorAll(".tabs button").forEach(b =>
   b.addEventListener("click", () => switchTab(b.getAttribute("data-tab"))));
 
 /* ============ boot ============ */
-load(); render();
-loadAccelerators();
+(async () => {
+  await load();
+  await loadAccelerators();
+  render();
+})();
 </script>
 </body>
 </html>
